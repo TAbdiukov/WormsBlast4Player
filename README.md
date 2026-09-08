@@ -1,82 +1,54 @@
-# Worms Blast - experimental four-player bindings
+# Worms Blast /4PLAYER Fix
 
-`controls.txt` is a 48-record test preset. `generate_controls.py` exports existing keyboard mappings from `controls.dat`, preserves P1, and replaces P2/P3/P4 with the preset layouts.
+Fixes Worms Blast's `/4PLAYER` mode and provides four-player keyboard bindings.
 
-> **Not a complete four-player fix.** These files supply keyboard bindings; they do not make `/4PLAYER` fully playable. Issues may include round-start failures and unresponsive in-game movement. The game's four-player path may be bugged or unfinished; the root cause remains unconfirmed. **Do report usage issues and bugs.**
+[![buymeacoffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/tabdiukov)
 
-## Preset
+**For almost all users:** download the [latest release](https://github.com/TAbdiukov/WormsBlast4PlayerFix/releases/latest).
 
-| Action | P1 | P2 | P3 | P4 |
-|---|---|---|---|---|
-| Move left | Left arrow | Numpad 4 | J | A |
-| Move right | Right arrow | Numpad 6 | L | D |
-| Aim up | Up arrow | Numpad 8 | I | W |
-| Aim down | Down arrow | Numpad 2 | K | S |
-| Fire | Space | Numpad + | U | Q |
-| Swap weapon | Enter | Numpad Enter | O | E |
+The included `controls.txt` provides keyboard bindings for four local players. The optional `generate_controls.py` utility can instead create a controls file that preserves Player 1's bindings from your existing `data\controls.dat`.
 
-P2 needs a numeric keypad. To retain your actual P1 mapping, generate a file from the original DAT instead.
+Please report bugs or compatibility problems through [GitHub Issues](https://github.com/TAbdiukov/WormsBlast4PlayerFix/issues).
 
-## Preserve existing P1 mapping
+## Default controls
 
-Requires Python 3.9+, no dependencies.
+| Action      | P1          | P2           | P3 | P4 |
+| ----------- | ----------- | ------------ | -- | -- |
+| Move left   | Left arrow  | Numpad 4     | J  | A  |
+| Move right  | Right arrow | Numpad 6     | L  | D  |
+| Aim up      | Up arrow    | Numpad 8     | I  | W  |
+| Aim down    | Down arrow  | Numpad 2     | K  | S  |
+| Fire        | Space       | Numpad +     | U  | Q  |
+| Swap weapon | Enter       | Numpad Enter | O  | E  |
+
+P2 requires a numeric keypad.
+
+## Installation
+
+1. Download the [latest release](https://github.com/TAbdiukov/WormsBlast4PlayerFix/releases/latest).
+2. Back up your existing game files, particularly `controls.txt`, `data\controls.dat`, and `data\GameSave.dat`.
+3. Follow the instructions included with the release.
+4. Start Worms Blast with the `/4PLAYER` option and select human players.
+
+> **Save data can override bindings.** The game subsequently loads `data\GameSave.dat`, falling back to `data\DfGmSv.dat`. Test changes on a copy of the game rather than deleting existing progress.
+
+Shared-keyboard rollover and ghosting limitations still apply.
+
+## Optional: preserve your existing P1 mapping
+
+Requires Python 3.9 or later and has no external dependencies.
+
+Use this only if you want to generate a four-player `controls.txt` while retaining Player 1's existing keyboard mapping:
 
 ```bat
 python generate_controls.py --output "controls.from-defaults.txt"
 ```
 
-The script expects `data\controls.dat` relative to the current directory and reports a
-successful read/parse before generating output. If needed, override that path explicitly:
+### Inspect an existing controls.dat
 
-```bat
-python generate_controls.py --source "D:\path\to\data\controls.dat" --output "controls.from-defaults.txt"
+To parse and inspect the DAT without generating a new controls.txt, use:
 ```
-
-Do not use `contrPS2.dat`.
-
-To inspect the DAT without generating `controls.txt`, use:
-
-```bat
 python generate_controls.py --read
 ```
 
-This prints the parsed type-7 control records and writes the same diagnostic readout to a
-timestamped file such as `controls.readout.20260908-095600.txt` in the current directory.
-
-The generator preserves text-representable input records except P2/P3/P4 replacement slots `6000–6011`, `7000–7011`, and `8000–8011`. It validates the P1 core mapping and assigns the layouts above to P2/P3/P4. If one of those fixed layouts conflicts with another preserved gameplay mapping, generation is rejected rather than selecting an alternative.
-
-It leaves the source untouched, refuses output overwrites, and rejects malformed or unsupported bindings—including gamepad/axis records, unsupported actions, and nonzero extra/source fields. Non-input DAT sections are reported but not exported: this preserves supported input mappings outside the P2/P3/P4 replacement slots, not the entire DAT.
-
-## Install and test
-
-Back up `controls.txt`, `data\controls.dat`, and `GameSave.dat`. Prefer a separate installation copy.
-
-Rename the generated file to `controls.txt`, or use the preset. Place it beside `start.bat` in the game root:
-
-```bat
-@echo off
-set "XEF=.\XEF"
-set "XOM=.\XOM"
-".\XOM\bin\WormsBlast.exe" /4PLAYER /NOLOGO /W [width] /H [height] /WIN
-```
-
-(adjust [width] and [height] per desired resolution)
-
-WormsBlast.exe will compile `controls.txt` into `data\controls.dat`. 
-
-**Save data can override bindings.** Startup subsequently loads `data\GameSave.dat`, falling back to `data\DfGmSv.dat`. Moving the main save aside may not remove overrides. Test on a copy rather than deleting progress.
-
-Select human players. Leave debug keys and camera controls disabled. Test every action and key release separately, then simultaneous input. Try setting Player 3 or 4 to be human for the first time. Shared-keyboard rollover/ghosting limits still apply.
-
-## File format
-
-Exactly one skipped header line, followed by tab-separated records:
-
-```text
-record_id<TAB>ACTION<TAB>zero_based_player<TAB>group<TAB>decimal_keycode
-```
-
-The file format uses literal tabs, ASCII without a BOM, CRLF line endings without a final newline.
-
--------------------
-Tim Abdiukov
+`--read` does not generate or modify controls.txt or the source DAT.
