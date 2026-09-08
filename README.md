@@ -1,6 +1,6 @@
 # Worms Blast - experimental four-player bindings
 
-`controls.txt` is a 48-record test preset. `generate_controls.py` writes the same fixed P1-P4 keyboard preset without reading `controls.dat`.
+`controls.txt` is a 48-record test preset. `generate_controls.py` writes a fixed P1-P4 keyboard preset.
 
 > **Not a complete four-player fix.** These files supply keyboard bindings; they do not make `/4PLAYER` fully playable. Issues may include round-start failures and unresponsive in-game movement. The game's four-player path may be bugged or unfinished; the root cause remains unconfirmed. **Do report usage issues and bugs.**
 
@@ -25,8 +25,7 @@ Requires Python 3.9+, no dependencies.
 python generate_controls.py --output "controls.generated.txt"
 ```
 
-Normal generation does not read or honour `controls.dat`; it always emits the fixed preset
-shown above. Existing output files are still refused rather than overwritten.
+Normal generation always emits the fixed preset shown above.
 
 To inspect the DAT without generating `controls.txt`, use:
 

@@ -171,7 +171,7 @@ def make_player(player: int, keys: tuple[tuple[str, int], ...]) -> list[Binding]
     return rows
 
 def make_preset() -> tuple[list[Binding], dict[int, str]]:
-    """Build the fixed P1-P4 keyboard preset without reading controls.dat."""
+    """Build a fixed P1-P4 keyboard preset"""
     result: list[Binding] = []
     descriptions: dict[int, str] = {}
     for player, (name, keys) in enumerate(LAYOUTS):
@@ -245,7 +245,6 @@ def main() -> int:
         with args.output.open("xb") as stream:
             stream.write(payload)
         print("Created %s (%d mappings)." % (args.output, len(result)))
-        print("controls.dat was not read or changed; all four players use the fixed preset.")
         by_id = {row.record_id: row for row in result}
         for player in range(4):
             values = []
