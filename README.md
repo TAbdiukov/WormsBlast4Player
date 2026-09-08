@@ -1,6 +1,6 @@
 # Worms Blast /4PLAYER Fix
 
-Fixes Worms Blast's `/4PLAYER` mode and provides four-player keyboard bindings.
+Fix Worms Blast's `/4PLAYER` mode and provide four-player keyboard bindings.
 
 [![buymeacoffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/tabdiukov)
 
