@@ -1,6 +1,6 @@
 # Worms Blast - experimental four-player bindings
 
-`controls.txt` is a 48-record test preset. `generate_controls.py` exports existing keyboard mappings from `controls.dat`, preserves P1/P2, and adds or replaces P3/P4.
+`controls.txt` is a 48-record test preset. `generate_controls.py` exports existing keyboard mappings from `controls.dat`, preserves P1, and replaces P2/P3/P4 with the preset layouts.
 
 > **Not a complete four-player fix.** These files supply keyboard bindings; they do not make `/4PLAYER` fully playable. Issues may include round-start failures and unresponsive in-game movement. The game's four-player path may be bugged or unfinished; the root cause remains unconfirmed. **Do report usage issues and bugs.**
 
@@ -8,16 +8,16 @@
 
 | Action | P1 | P2 | P3 | P4 |
 |---|---|---|---|---|
-| Move left | Left arrow | A | J | Numpad 4 |
-| Move right | Right arrow | D | L | Numpad 6 |
-| Aim up | Up arrow | W | I | Numpad 8 |
-| Aim down | Down arrow | S | K | Numpad 2 |
-| Fire | Space | Left Shift | U | Numpad + |
-| Swap weapon | Enter | Left Ctrl | O | Numpad Enter |
+| Move left | Left arrow | Numpad 4 | J | A |
+| Move right | Right arrow | Numpad 6 | L | D |
+| Aim up | Up arrow | Numpad 8 | I | W |
+| Aim down | Down arrow | Numpad 2 | K | S |
+| Fire | Space | Numpad + | U | Q |
+| Swap weapon | Enter | Numpad Enter | O | E |
 
-P4 needs a numeric keypad. To retain your actual P1/P2 defaults, generate a file from the original DAT instead.
+P2 needs a numeric keypad. To retain your actual P1 mapping, generate a file from the original DAT instead.
 
-## Preserve existing mappings
+## Preserve existing P1 mapping
 
 Requires Python 3.9+, no dependencies.
 
@@ -43,9 +43,9 @@ python generate_controls.py --read
 This prints the parsed type-7 control records and writes the same diagnostic readout to a
 timestamped file such as `controls.readout.20260908-095600.txt` in the current directory.
 
-The generator preserves text-representable input records except P3/P4 replacement slots `7000–7011` and `8000–8011`. It validates the P1/P2 core mappings and selects non-overlapping P3/P4 keys, preferring the layouts above. Check its printed assignments; conflicts may select alternatives.
+The generator preserves text-representable input records except P2/P3/P4 replacement slots `6000–6011`, `7000–7011`, and `8000–8011`. It validates the P1 core mapping and assigns the layouts above to P2/P3/P4. If one of those fixed layouts conflicts with another preserved gameplay mapping, generation is rejected rather than selecting an alternative.
 
-It leaves the source untouched, refuses output overwrites, and rejects malformed or unsupported bindings—including gamepad/axis records, unsupported actions, and nonzero extra/source fields. Non-input DAT sections are reported but not exported: this preserves input mappings, not the entire DAT.
+It leaves the source untouched, refuses output overwrites, and rejects malformed or unsupported bindings—including gamepad/axis records, unsupported actions, and nonzero extra/source fields. Non-input DAT sections are reported but not exported: this preserves supported input mappings outside the P2/P3/P4 replacement slots, not the entire DAT.
 
 ## Install and test
 

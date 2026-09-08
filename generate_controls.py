@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export Worms Blast PC controls.dat to controls.txt and add P3/P4 keyboard rows.
+"""Export Worms Blast PC controls.dat to controls.txt and set P2/P3/P4 keyboard rows.
 
 Source: supplied WormsBlast.exe.c (Build 1.09 decompilation).
 Binary reader: sub_498520 / sub_49B9B0.
@@ -7,7 +7,7 @@ Text format: sub_49B5C0. IDs: sub_45AB70. Groups: sub_428B40.
 
 Uses only Python's standard library. Never modifies the input DAT or overwrites
 an existing output. Input mappings that controls.txt cannot represent are rejected.
-P1/P2 come from YOUR input file; they are factory defaults only if that file is original.
+P1 comes from YOUR input file; it is a factory default only if that file is original.
 Static/synthetic tests are not a substitute for testing the actual game.
 """
 from __future__ import annotations
@@ -48,6 +48,11 @@ LAYOUTS = (
      (("RightCtrl", 157), ("Left", 203), ("Right", 205), ("Up", 200),
       ("Down", 208), ("RightShift", 54))),
 )
+PLAYER_LAYOUTS = {
+    1: LAYOUTS[1],
+    2: LAYOUTS[0],
+    3: LAYOUTS[3],
+}
 KEY_NAMES = {code: name for _, keys in LAYOUTS for name, code in keys}
 KEY_NAMES.update({1: "Escape", 15: "Tab", 28: "Enter", 29: "LeftCtrl",
                   42: "LeftShift", 57: "Space", 156: "NumEnter"})
@@ -177,44 +182,36 @@ def make_player(player: int, keys: tuple[tuple[str, int], ...]) -> list[Binding]
 
 def extend_controls(rows: list[Binding], non_input_ids: set[int]) -> tuple[
         list[Binding], dict[int, str]]:
-    """Preserve existing keyboard mappings except the canonical P3/P4 slots."""
+    """Preserve existing keyboard mappings except the canonical P2/P3/P4 slots."""
     for row in rows:
         row.check_text_representable()
     verify_player(rows, 0)
-    verify_player(rows, 1)
-    replace_ids = set(range(7000, 7012)) | set(range(8000, 8012))
+    replace_ids = (set(range(6000, 6012)) |
+                   set(range(7000, 7012)) |
+                   set(range(8000, 8012)))
     if replace_ids & non_input_ids:
-        raise FormatError("P3/P4 IDs collide with non-control records.")
+        raise FormatError("P2/P3/P4 IDs collide with non-control records.")
     for row in rows:
         if row.record_id in replace_ids:
             player = (row.record_id - 5000) // 1000
             _, _, press, release = ACTIONS[(row.record_id % 1000) // 2]
             expected = press if row.record_id % 2 == 0 else release
             if (row.player, row.group, row.action) != (player, player, expected):
-                raise FormatError("Record %d is not the expected P3/P4 slot."
+                raise FormatError("Record %d is not the expected P2/P3/P4 slot."
                                   % row.record_id)
     preserved = [row for row in rows if row.record_id not in replace_ids]
     occupied = {row.key for row in preserved if 0 <= row.group <= 3}
 
-    # Choose two mutually disjoint sets; avoid all preserved gameplay keys.
-    choices = None
-    for name3, keys3 in LAYOUTS:
-        codes3 = {code for _, code in keys3}
-        if codes3 & occupied:
-            continue
-        for name4, keys4 in LAYOUTS:
-            codes4 = {code for _, code in keys4}
-            if not (codes4 & (occupied | codes3)):
-                choices = ((name3, keys3), (name4, keys4))
-                break
-        if choices:
-            break
-    if choices is None:
-        raise FormatError("No two conflict-free proposed layouts remain. "
-                          "Choose different keys in LAYOUTS; no output was written.")
     result = list(preserved)
     descriptions: dict[int, str] = {}
-    for player, (name, keys) in zip((2, 3), choices):
+    for player, (name, keys) in PLAYER_LAYOUTS.items():
+        codes = {code for _, code in keys}
+        if codes & occupied:
+            raise FormatError(
+                "Requested P%d layout conflicts with another gameplay mapping. "
+                "Choose different keys in PLAYER_LAYOUTS; no output was written."
+                % (player + 1))
+        occupied.update(codes)
         result.extend(make_player(player, keys))
         descriptions[player] = name
     result.sort(key=lambda row: row.record_id)
@@ -225,7 +222,7 @@ def extend_controls(rows: list[Binding], non_input_ids: set[int]) -> tuple[
     # Explicitly verify that every record outside the requested slots is identical.
     after = {row.record_id: row for row in result}
     if any(after[row.record_id] != row for row in preserved):
-        raise AssertionError("An existing non-P3/P4 mapping changed.")
+        raise AssertionError("An existing non-P2/P3/P4 mapping changed.")
     return result, descriptions
 
 def render(rows: list[Binding], header: str) -> bytes:
@@ -287,11 +284,11 @@ def main() -> int:
             raise FormatError("Output already exists; choose another --output filename.")
         result, layouts = extend_controls(rows, non_input_ids)
         payload = render(
-            result, "ID\tACTION\tPLAYER\tGROUP\tKEYCODE | P1/P2 preserved from source DAT")
+            result, "ID\tACTION\tPLAYER\tGROUP\tKEYCODE | P1 preserved from source DAT")
         with args.output.open("xb") as stream:
             stream.write(payload)
         print("Created %s (%d mappings)." % (args.output, len(result)))
-        print("The source DAT was not changed. P1/P2 match that file, not an assumed preset.")
+        print("The source DAT was not changed. P1 matches that file, not an assumed preset.")
         if sum(counts[:6]):
             print("NOTE: %d non-input records are not representable in controls.txt "
                   "and were not exported." % sum(counts[:6]))
@@ -301,7 +298,7 @@ def main() -> int:
             for name, offset, _, _ in ACTIONS:
                 key = by_id[5000 + player * 1000 + offset].key
                 values.append("%s=%s[%d]" % (name, KEY_NAMES.get(key, "scan code"), key))
-            origin = "preserved" if player < 2 else layouts[player]
+            origin = "preserved" if player == 0 else layouts[player]
             print("P%d (%s): %s" % (player + 1, origin, ", ".join(values)))
         print("Back up game files before installation. Existing save data may override controls.")
         return 0
