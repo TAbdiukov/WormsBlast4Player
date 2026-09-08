@@ -234,54 +234,52 @@ def render(rows: list[Binding], header: str) -> bytes:
         raise ValueError("Header must occupy one line.")
     return (header + "\r\n" + "\r\n".join(row.line() for row in rows) + "\r\n").encode("ascii")
 
-def render_readout(rows: list[Binding], counts: tuple[int, ...], source: Path,
-                   timestamp: str) -> str:
+def render_readout(source: Path, rows: list[Binding], counts: tuple[int, ...],
+                   timestamp: datetime) -> str:
     lines = [
-        "Worms Blast controls.dat readout",
         "Source: %s" % source,
-        "Timestamp: %s" % timestamp,
-        "Section counts: %s" % ", ".join(
-            "type%d=%d" % (kind, count) for kind, count in enumerate(counts, start=1)),
+        "Read at: %s" % timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+        "Section counts: %s" % ", ".join(str(count) for count in counts),
+        "Input mappings: %d" % len(rows),
         "",
-        "ID\tACTION\tTOKEN\tGROUP\tPLAYER\tEXTRA\tSOURCE0\tSOURCE1\tSOURCE2\tEDGE\tKEY\tKEY_NAME",
+        "ID\tACTION\tACTION_ID\tPLAYER\tGROUP\tEDGE\tKEY\tEXTRA\tSOURCE0\tSOURCE1\tSOURCE2",
     ]
     for row in rows:
         token = TOKENS.get(row.action)
-        lines.append("%d\t%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%s" % (
-            row.record_id, row.action, token[0] if token else "UNKNOWN",
-            row.group, row.player, row.extra, row.source0, row.source1, row.source2,
-            row.edge, row.key, KEY_NAMES.get(row.key, "")))
+        action_name = token[0] if token is not None else "UNKNOWN"
+        lines.append("%d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d" % (
+            row.record_id, action_name, row.action, row.player, row.group, row.edge,
+            row.key, row.extra, row.source0, row.source1, row.source2))
     return "\n".join(lines) + "\n"
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, default=Path("data") / "controls.dat",
-                        help="PC controls DAT (default: data/controls.dat)")
+                        help="PC controls DAT (default: data\\controls.dat)")
     parser.add_argument("-o", "--output", type=Path, default=Path("controls.txt"),
                         help="New text file; must not already exist (default: controls.txt)")
     parser.add_argument("--read", action="store_true",
-                        help="Read the DAT and print/write a timestamped diagnostic readout")
+                        help="Read the DAT, print its input records, and save a timestamped readout")
     args = parser.parse_args()
     try:
         if not args.source.exists():
             raise FormatError(
-                "Expected controls DAT was not found at %s. Run this script from the "
-                "game directory, or use --source to specify its location." % args.source)
-        if not args.source.is_file():
-            raise FormatError("Expected controls DAT is not a file: %s." % args.source)
+                "Expected controls DAT was not found: %s\n"
+                "Run this script from the game root, or specify another DAT with --source PATH."
+                % args.source)
         if args.source.stat().st_size > 32 * 1024 * 1024:
             raise FormatError("Input exceeds the conservative 32 MiB size limit.")
         rows, counts, non_input_ids = read_dat(args.source.read_bytes())
-        print("Successfully read and parsed %s (%d control mappings)." %
-              (args.source, len(rows)))
+        print("Successfully read and parsed %s (%d input mappings)." % (args.source, len(rows)))
         if args.read:
-            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            readout_path = Path("%s.readout.%s.txt" % (args.source.stem, timestamp))
-            readout = render_readout(rows, counts, args.source, timestamp)
-            with readout_path.open("x", encoding="utf-8", newline="") as stream:
-                stream.write(readout)
+            timestamp = datetime.now()
+            readout_path = Path("%s.read.%s.txt" % (
+                args.source.stem, timestamp.strftime("%Y%m%d-%H%M%S")))
+            readout = render_readout(args.source, rows, counts, timestamp)
             sys.stdout.write(readout)
-            print("Created diagnostic readout %s." % readout_path)
+            with readout_path.open("x", encoding="utf-8", newline="\n") as stream:
+                stream.write(readout)
+            print("Saved readout to %s." % readout_path)
             return 0
         if args.source.resolve() == args.output.resolve():
             raise FormatError("Input and output must be different files.")
