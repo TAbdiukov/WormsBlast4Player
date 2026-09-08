@@ -1,6 +1,6 @@
 # Worms Blast - experimental four-player bindings
 
-`controls.txt` is a 48-record test preset. `generate_controls.py` exports existing keyboard mappings from `controls.dat`, preserves P1/P2, and adds or replaces P3/P4.
+`controls.txt` is a 48-record test preset. `generate_controls.py` writes the same fixed P1-P4 keyboard preset without reading `controls.dat`.
 
 > **Not a complete four-player fix.** These files supply keyboard bindings; they do not make `/4PLAYER` fully playable. Issues may include round-start failures and unresponsive in-game movement. The game's four-player path may be bugged or unfinished; the root cause remains unconfirmed. **Do report usage issues and bugs.**
 
@@ -15,37 +15,34 @@
 | Fire | Space | Left Shift | U | Numpad + |
 | Swap weapon | Enter | Left Ctrl | O | Numpad Enter |
 
-P4 needs a numeric keypad. To retain your actual P1/P2 defaults, generate a file from the original DAT instead.
+P4 needs a numeric keypad.
 
-## Preserve existing mappings
+## Generate the preset
 
 Requires Python 3.9+, no dependencies.
 
 ```bat
-python generate_controls.py --output "controls.from-defaults.txt"
+python generate_controls.py --output "controls.generated.txt"
 ```
 
-The script expects `data\controls.dat` relative to the current directory and reports a
-successful read/parse before generating output. If needed, override that path explicitly:
-
-```bat
-python generate_controls.py --source "D:\path\to\data\controls.dat" --output "controls.from-defaults.txt"
-```
-
-Do not use `contrPS2.dat`.
+Normal generation does not read or honour `controls.dat`; it always emits the fixed preset
+shown above. Existing output files are still refused rather than overwritten.
 
 To inspect the DAT without generating `controls.txt`, use:
 
 ```bat
-python generate_controls.py --read
+python generate_controls.py -r
 ```
+
+`--read` is the long form. This diagnostic mode uses `data\controls.dat` by default; if
+needed, override that path with `--source`. Do not use `contrPS2.dat`.
 
 This prints the parsed type-7 control records and writes the same diagnostic readout to a
 timestamped file such as `controls.readout.20260908-095600.txt` in the current directory.
 
-The generator preserves text-representable input records except P3/P4 replacement slots `7000–7011` and `8000–8011`. It validates the P1/P2 core mappings and selects non-overlapping P3/P4 keys, preferring the layouts above. Check its printed assignments; conflicts may select alternatives.
-
-It leaves the source untouched, refuses output overwrites, and rejects malformed or unsupported bindings—including gamepad/axis records, unsupported actions, and nonzero extra/source fields. Non-input DAT sections are reported but not exported: this preserves input mappings, not the entire DAT.
+The generator writes exactly 48 fixed keyboard records for P1-P4 and does not inspect the
+DAT for conflicts or existing mappings. `--read/-r` remains diagnostic only and rejects
+malformed DAT structure while printing the parsed type-7 bindings for inspection.
 
 ## Install and test
 
