@@ -229,10 +229,10 @@ def extend_controls(rows: list[Binding], non_input_ids: set[int]) -> tuple[
     return result, descriptions
 
 def render(rows: list[Binding], header: str) -> bytes:
-    # One skipped header, literal tabs, ASCII, CRLF, and a final newline.
+    # One skipped header, literal tabs, ASCII, CRLF, and no final newline.
     if "\n" in header or "\r" in header:
         raise ValueError("Header must occupy one line.")
-    return (header + "\r\n" + "\r\n".join(row.line() for row in rows) + "\r\n").encode("ascii")
+    return "\r\n".join([header] + [row.line() for row in rows]).encode("ascii")
 
 def render_readout(source: Path, rows: list[Binding], counts: tuple[int, ...],
                    timestamp: datetime) -> str:
