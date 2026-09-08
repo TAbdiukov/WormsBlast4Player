@@ -11,9 +11,9 @@
 | Move left | Left arrow | A | J | Numpad 4 |
 | Move right | Right arrow | D | L | Numpad 6 |
 | Aim up | Up arrow | W | I | Numpad 8 |
-| Aim down | Down arrow | S | K | Numpad 5 |
-| Fire | Space | Left Shift | U | Numpad 0 |
-| Swap weapon | Enter | Left Ctrl | O | Numpad decimal |
+| Aim down | Down arrow | S | K | Numpad 2 |
+| Fire | Space | Left Shift | U | Numpad + |
+| Swap weapon | Enter | Left Ctrl | O | Numpad Enter |
 
 P4 needs a numeric keypad. To retain your actual P1/P2 defaults, generate a file from the original DAT instead.
 
@@ -22,10 +22,26 @@ P4 needs a numeric keypad. To retain your actual P1/P2 defaults, generate a file
 Requires Python 3.9+, no dependencies.
 
 ```bat
-python generate_controls.py "data\controls.dat" --output "controls.from-defaults.txt"
+python generate_controls.py --output "controls.from-defaults.txt"
 ```
 
-If needed, adjust the path to the loose/unpacked PC DAT; do not use `contrPS2.dat`.
+The script expects `data\controls.dat` relative to the current directory and reports a
+successful read/parse before generating output. If needed, override that path explicitly:
+
+```bat
+python generate_controls.py --source "D:\path\to\data\controls.dat" --output "controls.from-defaults.txt"
+```
+
+Do not use `contrPS2.dat`.
+
+To inspect the DAT without generating `controls.txt`, use:
+
+```bat
+python generate_controls.py --read
+```
+
+This prints the parsed type-7 control records and writes the same diagnostic readout to a
+timestamped file such as `controls.readout.20260908-095600.txt` in the current directory.
 
 The generator preserves text-representable input records except P3/P4 replacement slots `7000–7011` and `8000–8011`. It validates the P1/P2 core mappings and selects non-overlapping P3/P4 keys, preferring the layouts above. Check its printed assignments; conflicts may select alternatives.
 
