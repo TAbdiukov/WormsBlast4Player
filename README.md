@@ -40,6 +40,8 @@ Requires Python 3.9 or later and has no external dependencies.
 
 Use this only if you want to generate a four-player `controls.txt` while retaining Player 1's existing keyboard mapping:
 
+`/4PLAYER` also requires a patched `WormsBlast.exe`; the release includes this fix. For manual patching, use [Ikejime](https://github.com/TAbdiukov/Ikejime) with [`p-WormsBlast_4Player-Bugfix.py`](https://github.com/TAbdiukov/Ikejime/blob/main/p-WormsBlast_4Player-Bugfix.py).
+
 ```bat
 python generate_controls.py --output "controls.from-defaults.txt"
 ```
